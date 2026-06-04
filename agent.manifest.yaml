@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/AgentSchema/refs/heads/main/schemas/v1.0/AgentManifest.yaml
+name: travel-planner-langgraph
+displayName: "Travel Planner LangGraph"
+description: >
+  Multi-agent travel planner built with LangGraph and exposed through the
+  Microsoft Foundry hosted-agent Responses protocol.
+metadata:
+  tags:
+    - AI Agent Hosting
+    - Responses Protocol
+    - Bring Your Own
+    - LangGraph
+    - Travel Planning
+    - Tool Calling
+    - Python
+template:
+  name: travel-planner-langgraph
+  kind: hosted
+  protocols:
+    - protocol: responses
+      version: 1.0.0
+  environment_variables:
+    - name: AZURE_AI_MODEL_DEPLOYMENT_NAME
+      value: "{{AZURE_AI_MODEL_DEPLOYMENT_NAME}}"
+    - name: TRAVEL_AGENT_LOG_LEVEL
+      value: "INFO"
+    - name: TRAVEL_TOOL_TIMEOUT_SECONDS
+      value: "8"
+    - name: AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED
+      value: "{{AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED}}"
+    - name: OTEL_SEMCONV_STABILITY_OPT_IN
+      value: "{{OTEL_SEMCONV_STABILITY_OPT_IN}}"
+    - name: OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT
+      value: "{{OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT}}"
+    - name: CHAOS_MODE
+      value: "{{CHAOS_MODE}}"
+    - name: CHAOS_RATE
+      value: "{{CHAOS_RATE}}"
+    - name: CHAOS_LATENCY_MIN_SECONDS
+      value: "{{CHAOS_LATENCY_MIN_SECONDS}}"
+    - name: CHAOS_LATENCY_MAX_SECONDS
+      value: "{{CHAOS_LATENCY_MAX_SECONDS}}"
+resources:
+  - kind: model
+    id: gpt-5.4-mini
+    name: AZURE_AI_MODEL_DEPLOYMENT_NAME

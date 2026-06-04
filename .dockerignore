@@ -1,0 +1,14 @@
+.azure/
+.env
+.foundry/
+.git/
+.github/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.venv/
+__pycache__/
+*.pyc
+dist/
+build/
+htmlcov/

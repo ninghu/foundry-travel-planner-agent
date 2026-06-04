@@ -1,0 +1,62 @@
+name: Deploy Foundry Agent
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: foundry-agent-main
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy hosted agent
+    runs-on: ubuntu-latest
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_PRINCIPAL_ID: ${{ secrets.AZURE_PRINCIPAL_ID }}
+      AZURE_PRINCIPAL_TYPE: ServicePrincipal
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure CLI login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install Azure Developer CLI
+        uses: Azure/setup-azd@v2
+
+      - name: Azure Developer CLI login
+        shell: pwsh
+        run: |
+          azd auth login `
+            --client-id "$env:AZURE_CLIENT_ID" `
+            --tenant-id "$env:AZURE_TENANT_ID" `
+            --federated-credential-provider github `
+            --no-prompt
+
+      - name: Deploy to Foundry
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:AZURE_PRINCIPAL_ID)) {
+            throw "AZURE_PRINCIPAL_ID secret is required."
+          }
+
+          ./scripts/deploy_foundry.ps1 `
+            -PrincipalId "$env:AZURE_PRINCIPAL_ID" `
+            -PrincipalType ServicePrincipal `
+            -Subscription "$env:AZURE_SUBSCRIPTION_ID" `
+            -ChaosMode off

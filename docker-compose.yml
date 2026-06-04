@@ -1,0 +1,8 @@
+services:
+  travel-planner-agent:
+    build:
+      context: .
+    env_file:
+      - .env
+    ports:
+      - "8088:8088"
