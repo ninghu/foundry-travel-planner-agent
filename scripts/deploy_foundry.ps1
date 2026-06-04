@@ -11,9 +11,6 @@ param(
     [string]$Location = "westus",
     [string]$AiDeploymentsLocation = "swedencentral",
     [string]$Subscription = "7b43cfa1-da92-48cc-865d-5499466b3b5c",
-    [string]$PrincipalId = $env:AZURE_PRINCIPAL_ID,
-    [ValidateSet("User", "ServicePrincipal")]
-    [string]$PrincipalType = $env:AZURE_PRINCIPAL_TYPE,
     [string]$AzureTracingGenAiContentRecordingEnabled = "true",
     [string]$OtelSemconvStabilityOptIn = "gen_ai_latest_experimental",
     [string]$OtelInstrumentationGenAiCaptureMessageContent = "SPAN_AND_EVENT",
@@ -71,42 +68,6 @@ function Ensure-FoundryUserRole {
     }
 }
 
-function Get-CallerPrincipal {
-    if (-not [string]::IsNullOrWhiteSpace($PrincipalId)) {
-        $resolvedType = if ([string]::IsNullOrWhiteSpace($PrincipalType)) { "ServicePrincipal" } else { $PrincipalType }
-        return @{
-            Id = $PrincipalId
-            Type = $resolvedType
-        }
-    }
-
-    $account = az account show -o json | ConvertFrom-Json
-    if ($LASTEXITCODE -ne 0) {
-        throw "Could not inspect the signed-in Azure account."
-    }
-
-    if ($account.user.type -eq "servicePrincipal") {
-        $appId = if (-not [string]::IsNullOrWhiteSpace($env:AZURE_CLIENT_ID)) { $env:AZURE_CLIENT_ID } else { $account.user.name }
-        $spObjectId = az ad sp show --id $appId --query id -o tsv
-        if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($spObjectId)) {
-            throw "Could not resolve service principal object id. Set AZURE_PRINCIPAL_ID or pass -PrincipalId."
-        }
-        return @{
-            Id = $spObjectId
-            Type = "ServicePrincipal"
-        }
-    }
-
-    $userObjectId = az ad signed-in-user show --query id -o tsv
-    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($userObjectId)) {
-        throw "Could not resolve signed-in Azure user object id."
-    }
-    return @{
-        Id = $userObjectId
-        Type = "User"
-    }
-}
-
 if (-not (Get-Command azd -ErrorAction SilentlyContinue)) {
     throw "azd is required. Install Azure Developer CLI first."
 }
@@ -123,7 +84,10 @@ if (-not (Test-Path ".azure\$Environment\.env")) {
     Invoke-Checked { azd env select $Environment } "azd environment selection"
 }
 
-$callerPrincipal = Get-CallerPrincipal
+$PrincipalId = az ad signed-in-user show --query id -o tsv
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($PrincipalId)) {
+    throw "Could not resolve signed-in Azure user object id."
+}
 
 Invoke-Checked { azd env set AZURE_SUBSCRIPTION_ID $Subscription --environment $Environment } "azd env set AZURE_SUBSCRIPTION_ID"
 Invoke-Checked { azd env set AZURE_RESOURCE_GROUP $ResourceGroupName --environment $Environment } "azd env set AZURE_RESOURCE_GROUP"
@@ -140,8 +104,8 @@ Invoke-Checked { azd env set CHAOS_MODE $ChaosMode --environment $Environment } 
 Invoke-Checked { azd env set CHAOS_RATE $ChaosRate --environment $Environment } "azd env set CHAOS_RATE"
 Invoke-Checked { azd env set CHAOS_LATENCY_MIN_SECONDS $ChaosLatencyMinSeconds --environment $Environment } "azd env set CHAOS_LATENCY_MIN_SECONDS"
 Invoke-Checked { azd env set CHAOS_LATENCY_MAX_SECONDS $ChaosLatencyMaxSeconds --environment $Environment } "azd env set CHAOS_LATENCY_MAX_SECONDS"
-Invoke-Checked { azd env set AZURE_PRINCIPAL_ID $callerPrincipal.Id --environment $Environment } "azd env set AZURE_PRINCIPAL_ID"
-Invoke-Checked { azd env set AZURE_PRINCIPAL_TYPE $callerPrincipal.Type --environment $Environment } "azd env set AZURE_PRINCIPAL_TYPE"
+Invoke-Checked { azd env set AZURE_PRINCIPAL_ID $PrincipalId --environment $Environment } "azd env set AZURE_PRINCIPAL_ID"
+Invoke-Checked { azd env set AZURE_PRINCIPAL_TYPE "User" --environment $Environment } "azd env set AZURE_PRINCIPAL_TYPE"
 Invoke-Checked { azd env set USE_EXISTING_AI_PROJECT "true" --environment $Environment } "azd env set USE_EXISTING_AI_PROJECT"
 Invoke-Checked { azd env set ENABLE_HOSTED_AGENTS "true" --environment $Environment } "azd env set ENABLE_HOSTED_AGENTS"
 Invoke-Checked { azd env set ENABLE_MONITORING "false" --environment $Environment } "azd env set ENABLE_MONITORING"

@@ -64,22 +64,6 @@ $env:OTEL_SEMCONV_STABILITY_OPT_IN = "gen_ai_latest_experimental"
 $env:OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT = "SPAN_AND_EVENT"
 ```
 
-## CI/CD
-
-GitHub Actions deploys the hosted agent on pushes to `main` using
-`.github/workflows/deploy-foundry.yml`. The workflow uses Azure OIDC, so the
-repository needs these secrets:
-
-```text
-AZURE_CLIENT_ID
-AZURE_TENANT_ID
-AZURE_SUBSCRIPTION_ID
-AZURE_PRINCIPAL_ID
-```
-
-The Azure identity should have deployment permissions on the target resource
-group and `Foundry User` on the AI Services account used by the project.
-
 ## Generate Traffic
 
 After deployment:
