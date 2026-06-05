@@ -81,6 +81,34 @@ For local traffic against `python main.py`:
 python scripts/generate_traffic.py --local-url http://localhost:8088/responses --max-requests 5
 ```
 
+Traffic can also override chaos per request through response metadata. To mix
+healthy requests with low-evaluator-score requests:
+
+```powershell
+python scripts/generate_traffic.py `
+  --agent-name travel-planner-langgraph `
+  --project-endpoint https://foundry-sre-project-resource.services.ai.azure.com/api/projects/foundry-sre-project `
+  --random-chaos-mode `
+  --chaos-modes off,low_eval,tool_failure `
+  --chaos-rate 1
+```
+
+Use a single per-request override with `--chaos-mode intent_miss`.
+
+## Trigger SRE Investigation
+
+Invoke the configured SRE Agent HTTP trigger and return the created thread URL:
+
+```powershell
+.\scripts\invoke_sre_http_trigger.ps1
+```
+
+Pass a specific issue description with:
+
+```powershell
+.\scripts\invoke_sre_http_trigger.ps1 -ProblemDescription "agent invocation failed"
+```
+
 ## Chaos Mode
 
 Chaos is off by default. Enable it with environment variables:
@@ -93,13 +121,38 @@ $env:CHAOS_LATENCY_MAX_SECONDS = "20"
 python main.py
 ```
 
-Supported `CHAOS_MODE` values are `random`, `http_500`, `latency`,
-`tool_failure`, and `llm_failure`. You can combine specific modes with commas,
-for example `tool_failure,llm_failure`. `CHAOS_RATE` is a probability from `0`
-to `1`.
+Supported `CHAOS_MODE` values are `random`, `all`, `http_500`, `latency`,
+`tool_failure`, `llm_failure`, `low_eval`, `unfair_response`, `intent_miss`,
+and `task_incomplete`. You can combine specific modes with commas, for example
+`intent_miss,task_incomplete`. `CHAOS_RATE` is a probability from `0` to `1`.
+
+Evaluator-focused modes:
+
+```text
+tool_failure     -> Tool-Call-Success-Evaluator
+unfair_response  -> Hate-and-Unfairness-Evaluator, via unfair economic exclusion
+intent_miss      -> Intent-Resolution-Evaluator
+task_incomplete  -> Task-Completion-Evaluator
+low_eval         -> randomly picks one final-answer evaluator mode
+```
+
+For deterministic local evaluator testing, set `CHAOS_RATE` to `1` and choose a
+single mode:
+
+```powershell
+$env:CHAOS_MODE = "intent_miss"
+$env:CHAOS_RATE = "1"
+python main.py
+```
 
 Deploy chaos settings to Foundry with:
 
 ```powershell
 .\scripts\deploy_foundry.ps1 -ChaosMode random -ChaosRate 0.2
+```
+
+For continuous evaluation probes in Foundry, deploy a specific low-score mode:
+
+```powershell
+.\scripts\deploy_foundry.ps1 -ChaosMode low_eval -ChaosRate 1
 ```

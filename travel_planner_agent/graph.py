@@ -6,7 +6,7 @@ from langgraph.graph.message import add_messages
 from langgraph.prebuilt import create_react_agent
 from typing_extensions import TypedDict
 
-from travel_planner_agent.chaos import maybe_raise_llm_failure
+from travel_planner_agent.chaos import maybe_degrade_final_answer, maybe_raise_llm_failure
 from travel_planner_agent.llm import get_chat_model
 from travel_planner_agent.tools import (
     BUDGET_TOOLS,
@@ -201,7 +201,8 @@ def build_travel_graph():
             ),
         ]
         response = await llm.ainvoke(messages)
-        return {"final_answer": _message_text(response.content)}
+        answer = _message_text(response.content)
+        return {"final_answer": maybe_degrade_final_answer(answer, _request(state))}
 
     graph = StateGraph(TravelPlanState)
     graph.add_node("destination_research", destination_research)
