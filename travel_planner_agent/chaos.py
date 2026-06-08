@@ -1,9 +1,6 @@
 import asyncio
 import logging
 import random
-from collections.abc import Iterator
-from contextlib import contextmanager
-from contextvars import ContextVar
 from dataclasses import dataclass
 
 from travel_planner_agent.config import get_settings
@@ -23,28 +20,28 @@ class ChaosEvent:
     delay_seconds: float | None = None
 
 
-@dataclass(frozen=True)
-class ChaosOverride:
-    mode: str | None = None
-    rate: float | None = None
-
-
 OPERATIONAL_ISSUES = (
     "http_500",
     "latency",
     "tool_failure",
     "llm_failure",
 )
-FINAL_ANSWER_ISSUES = ("unfair_response", "intent_miss", "task_incomplete")
+FINAL_ANSWER_ISSUES = (
+    "low_quality_response",
+    "unfair_response",
+    "intent_miss",
+    "task_incomplete",
+)
 ISSUES = (
     *OPERATIONAL_ISSUES,
+    "low_quality_response",
     "unfair_response",
     "intent_miss",
     "task_incomplete",
 )
 ISSUE_GROUPS = {
     "random": OPERATIONAL_ISSUES,
-    "low_eval": FINAL_ANSWER_ISSUES,
+    "low_eval": ("low_quality_response",),
     "all": ISSUES,
 }
 ALIASES = {
@@ -64,6 +61,11 @@ ALIASES = {
     "low_evaluator": "low_eval",
     "low_evaluator_scores": "low_eval",
     "low_scores": "low_eval",
+    "low_quality": "low_quality_response",
+    "low_quality_response": "low_quality_response",
+    "bad_eval": "low_quality_response",
+    "bad_evaluation": "low_quality_response",
+    "bad_response": "low_quality_response",
     "500": "http_500",
     "http500": "http_500",
     "http_500": "http_500",
@@ -99,44 +101,12 @@ ALIASES = {
 }
 OFF_VALUES = {"", "0", "false", "off", "none", "disabled", "disable"}
 
-_REQUEST_OVERRIDE: ContextVar[ChaosOverride | None] = ContextVar(
-    "request_chaos_override",
-    default=None,
-)
-
-
-def _clamp_rate(value: float) -> float:
-    return max(0.0, min(float(value), 1.0))
-
-
-@contextmanager
-def chaos_request_override(
-    mode: str | None = None,
-    rate: float | None = None,
-) -> Iterator[None]:
-    clean_mode = mode.strip() if isinstance(mode, str) and mode.strip() else None
-    clean_rate = _clamp_rate(rate) if rate is not None else None
-    token = _REQUEST_OVERRIDE.set(ChaosOverride(mode=clean_mode, rate=clean_rate))
-    try:
-        yield
-    finally:
-        _REQUEST_OVERRIDE.reset(token)
-
 
 def _active_chaos_mode() -> str:
-    override = _REQUEST_OVERRIDE.get()
-    if override and override.mode is not None:
-        return override.mode
     return get_settings().chaos_mode
 
 
 def _active_chaos_rate() -> float:
-    override = _REQUEST_OVERRIDE.get()
-    if override:
-        if override.rate is not None:
-            return override.rate
-        if override.mode and override.mode.strip().lower() not in OFF_VALUES:
-            return 1.0
     return get_settings().chaos_rate
 
 
@@ -229,6 +199,15 @@ def maybe_degrade_final_answer(answer: str, user_request: str) -> str:
     event = _roll_any(FINAL_ANSWER_ISSUES, "final_answer")
     if not event:
         return answer
+
+    if event.issue == "low_quality_response":
+        return (
+            "trip? no. printer toner route maybe 17.\n"
+            "MISSING itinerary. MISSING budget. MISSING weather. MISSING logistics.\n"
+            "Wrong task: restock office snacks, rename files, count chairs.\n"
+            "No destination plan. No dates. No next actions. garbled_fragment_42.\n\n"
+            "_CHAOS_MODE simulated a low-quality evaluator failure response._"
+        )
 
     if event.issue == "unfair_response":
         return (

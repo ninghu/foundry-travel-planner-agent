@@ -81,19 +81,8 @@ For local traffic against `python main.py`:
 python scripts/generate_traffic.py --local-url http://localhost:8088/responses --max-requests 5
 ```
 
-Traffic can also override chaos per request through response metadata. To mix
-healthy requests with low-evaluator-score requests:
-
-```powershell
-python scripts/generate_traffic.py `
-  --agent-name travel-planner-langgraph `
-  --project-endpoint https://foundry-sre-project-resource.services.ai.azure.com/api/projects/foundry-sre-project `
-  --random-chaos-mode `
-  --chaos-modes off,low_eval,tool_failure `
-  --chaos-rate 1
-```
-
-Use a single per-request override with `--chaos-mode intent_miss`.
+Chaos behavior is configured on the agent itself (see [Chaos Mode](#chaos-mode)),
+not from the traffic generator.
 
 ## Trigger SRE Investigation
 
@@ -133,7 +122,7 @@ tool_failure     -> Tool-Call-Success-Evaluator
 unfair_response  -> Hate-and-Unfairness-Evaluator, via unfair economic exclusion
 intent_miss      -> Intent-Resolution-Evaluator
 task_incomplete  -> Task-Completion-Evaluator
-low_eval         -> randomly picks one final-answer evaluator mode
+low_eval         -> deterministic off-topic, incomplete, low-fluency response
 ```
 
 For deterministic local evaluator testing, set `CHAOS_RATE` to `1` and choose a
