@@ -71,7 +71,13 @@ def build_travel_graph():
             "You are the destination research sub-agent for a travel planner. "
             "Use tools when they can verify geography, country facts, weather, or "
             "destination background. Return concise notes with evidence and call out "
-            "uncertainty instead of inventing facts."
+            "uncertainty instead of inventing facts. "
+            "If a tool call returns an error payload (a dict containing an 'error' key, "
+            "a 'TOOL_ERROR:' prefix, an SSL/timeout message, or 'No geocoding result found'), "
+            "treat that data as UNAVAILABLE. Do not invent coordinates, populations, "
+            "timezones, or country facts from general knowledge. Either retry the tool "
+            "with different arguments, or state the data gap explicitly (e.g. 'geocoding "
+            "tool unavailable; coordinates not verified')."
         ),
     )
     logistics_agent = create_react_agent(
@@ -80,7 +86,11 @@ def build_travel_graph():
         prompt=(
             "You are the logistics sub-agent. Estimate travel feasibility, rough "
             "distance, seasonal weather impacts, pacing, and route considerations. "
-            "Use tools for distance, geocoding, and weather."
+            "Use tools for distance, geocoding, and weather. "
+            "If estimate_route_distance, geocode_place, or get_weather_forecast returns "
+            "an error payload, do NOT invent specific distances in miles/km, flight "
+            "durations, or temperature/precipitation figures. Either retry, or note the "
+            "data gap explicitly in your output."
         ),
     )
     budget_agent = create_react_agent(
@@ -89,7 +99,10 @@ def build_travel_graph():
         prompt=(
             "You are the budget sub-agent. Use the budget and exchange-rate tools. "
             "Produce a practical range, explain assumptions, and flag that booked "
-            "prices must be verified."
+            "prices must be verified. "
+            "If estimate_trip_budget or the exchange-rate tool returns an error payload, "
+            "do NOT fabricate exchange rates or precise USD totals. Either retry, or "
+            "give a clearly labeled rough range and call out which inputs were missing."
         ),
     )
     itinerary_agent = create_react_agent(
@@ -98,7 +111,10 @@ def build_travel_graph():
         prompt=(
             "You are the itinerary sub-agent. Build a day-by-day plan that respects "
             "the user's constraints and the notes from the other sub-agents. Use tools "
-            "for weather or attraction context when helpful."
+            "for weather or attraction context when helpful. "
+            "If a tool returns an error payload, do not invent weather forecasts or "
+            "attraction-specific details; fall back to seasonal generalities and flag "
+            "the gap."
         ),
     )
 
@@ -181,7 +197,14 @@ def build_travel_graph():
                     "sub-agent notes into one clear plan. Include a short assumptions "
                     "section, a day-by-day itinerary, budget summary, logistics notes, "
                     "weather/seasonality notes, and next actions. Do not claim to book "
-                    "flights, hotels, or reservations."
+                    "flights, hotels, or reservations. "
+                    "If any sub-agent note mentions missing data, tool errors, or "
+                    "unverified figures, you MUST propagate that limitation into the "
+                    "Assumptions/Caveats section of the final plan — enumerate which "
+                    "tools failed and which numbers are unverified. Do not silently "
+                    "replace missing tool data with specific numbers from general "
+                    "knowledge (coordinates, populations, distances in miles/km, flight "
+                    "durations, weather forecasts, or USD budget totals)."
                 )
             ),
             HumanMessage(
