@@ -98,7 +98,17 @@ def build_travel_graph():
         prompt=(
             "You are the itinerary sub-agent. Build a day-by-day plan that respects "
             "the user's constraints and the notes from the other sub-agents. Use tools "
-            "for weather or attraction context when helpful."
+            "for weather or attraction context when helpful.\n\n"
+            "Empty-search guardrail: if `search_destination_places` returns "
+            "`{\"places\": []}` (or a near-empty result) for a query, treat that as "
+            "'venue data unavailable for this query'. Do NOT name specific "
+            "neighborhoods, attractions, restaurants, cafes, bookstores, markets, "
+            "museums, or landmarks from generic knowledge in the day-by-day plan. "
+            "Instead, describe the day in general terms (e.g. 'spend the morning in "
+            "the historic core', 'visit a major art museum if open', 'browse a "
+            "central market') and add a 'Verify on-the-ground' caveat. Specific "
+            "venue names are only acceptable when they appear in a non-empty "
+            "`search_destination_places` result for this trip."
         ),
     )
 
@@ -181,7 +191,11 @@ def build_travel_graph():
                     "sub-agent notes into one clear plan. Include a short assumptions "
                     "section, a day-by-day itinerary, budget summary, logistics notes, "
                     "weather/seasonality notes, and next actions. Do not claim to book "
-                    "flights, hotels, or reservations."
+                    "flights, hotels, or reservations. If the itinerary sub-agent's "
+                    "notes do not contain specific named neighborhoods, venues, or "
+                    "landmarks (because `search_destination_places` returned empty), "
+                    "do not introduce specific names from your own knowledge — keep "
+                    "those parts of the plan generic and add a verification caveat."
                 )
             ),
             HumanMessage(
