@@ -30,6 +30,13 @@ def _json(data: Any) -> str:
     return json.dumps(data, ensure_ascii=True, indent=2, default=str)
 
 
+def _json_error(error_msg: str, context: dict[str, Any] | None = None) -> str:
+    payload: dict[str, Any] = {"_tool_error": True, "error": error_msg}
+    if context:
+        payload.update(context)
+    return "TOOL_ERROR: " + _json(payload)
+
+
 def _geocode_raw(place: str) -> dict[str, Any]:
     data = _get_json(
         "https://geocoding-api.open-meteo.com/v1/search",
@@ -111,7 +118,7 @@ def geocode_place(place: str) -> str:
     try:
         return _json(_geocode_raw(place))
     except Exception as exc:
-        return _json({"error": str(exc), "place": place})
+        return _json_error(str(exc), {"tool": "geocode_place", "place": place})
 
 
 @tool
@@ -163,7 +170,10 @@ def get_weather_forecast(place: str, start_date: str | None = None, days: int = 
             )
         return _json({"location": location, "forecast": rows})
     except Exception as exc:
-        return _json({"error": str(exc), "place": place, "start_date": start_date})
+        return _json_error(
+            str(exc),
+            {"tool": "get_weather_forecast", "place": place, "start_date": start_date},
+        )
 
 
 @tool
@@ -203,7 +213,7 @@ def search_destination_places(query: str, limit: int = 3) -> str:
             }
         )
     except Exception as exc:
-        return _json({"error": str(exc), "query": query})
+        return _json_error(str(exc), {"tool": "search_destination_places", "query": query})
 
 
 @tool
@@ -235,7 +245,10 @@ def get_country_profile(place_or_country: str) -> str:
             }
         )
     except Exception as exc:
-        return _json({"error": str(exc), "place_or_country": place_or_country})
+        return _json_error(
+            str(exc),
+            {"tool": "get_country_profile", "place_or_country": place_or_country},
+        )
 
 
 @tool
@@ -262,7 +275,10 @@ def estimate_route_distance(origin: str, destination: str) -> str:
             }
         )
     except Exception as exc:
-        return _json({"error": str(exc), "origin": origin, "destination": destination})
+        return _json_error(
+            str(exc),
+            {"tool": "estimate_route_distance", "origin": origin, "destination": destination},
+        )
 
 
 @tool
@@ -280,12 +296,13 @@ def get_exchange_rate(base_currency: str, target_currency: str) -> str:
             }
         )
     except Exception as exc:
-        return _json(
+        return _json_error(
+            str(exc),
             {
-                "error": str(exc),
+                "tool": "get_exchange_rate",
                 "base_currency": base_currency,
                 "target_currency": target_currency,
-            }
+            },
         )
 
 
@@ -375,16 +392,17 @@ def estimate_trip_budget(
             }
         )
     except Exception as exc:
-        return _json(
+        return _json_error(
+            str(exc),
             {
-                "error": str(exc),
+                "tool": "estimate_trip_budget",
                 "origin": origin,
                 "destination": destination,
                 "nights": nights,
                 "travelers": travelers,
                 "style": style,
                 "target_currency": target_currency,
-            }
+            },
         )
 
 
