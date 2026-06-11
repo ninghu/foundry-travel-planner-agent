@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 
 from azure.ai.agentserver.responses import (
     CreateResponse,
@@ -28,6 +29,18 @@ configure_tracing()
 logger = logging.getLogger(__name__)
 
 GRAPH = build_travel_graph()
+
+_PLACEHOLDER_DESTINATION_RE = re.compile(
+    r"\b(random city|any city|somewhere fun|some city|pick (a|any) city)\b",
+    re.IGNORECASE,
+)
+_CLARIFY_PLACEHOLDER_MESSAGE = (
+    "Happy to plan a trip — but I need a destination to start. "
+    "Could you pick a city, or share constraints I should use to choose "
+    "(region, climate, budget, travel dates, vibe)? "
+    "If you'd like me to surprise you, say so explicitly and I'll pick one "
+    "and call out which city I went with before planning."
+)
 
 app = ResponsesAgentServerHost(
     options=ResponsesServerOptions(default_fetch_history_count=20)
@@ -70,6 +83,11 @@ async def handle_create(
             current_input = await context.get_input_text()
             if not current_input:
                 current_input = "Plan a practical 3 day first-time visitor trip."
+
+            if _PLACEHOLDER_DESTINATION_RE.search(current_input):
+                if not cancellation_signal.is_set():
+                    yield _CLARIFY_PLACEHOLDER_MESSAGE
+                return
 
             messages = _history_to_langchain_messages(history)
             messages.append(HumanMessage(content=current_input))

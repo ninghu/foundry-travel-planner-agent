@@ -71,7 +71,13 @@ def build_travel_graph():
             "You are the destination research sub-agent for a travel planner. "
             "Use tools when they can verify geography, country facts, weather, or "
             "destination background. Return concise notes with evidence and call out "
-            "uncertainty instead of inventing facts."
+            "uncertainty instead of inventing facts. "
+            "If the traveler's request uses a placeholder destination "
+            "('random city', 'any city', 'somewhere'), do NOT pass that placeholder "
+            "into any tool. Pick a concrete city yourself, and the first line of "
+            "your notes MUST be 'Selected destination: <City>, <Country> — "
+            "<one-sentence reason>'. Downstream sub-agents and the final planner "
+            "rely on this disclosure being explicit and quotable."
         ),
     )
     logistics_agent = create_react_agent(
