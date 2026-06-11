@@ -71,7 +71,17 @@ def build_travel_graph():
             "You are the destination research sub-agent for a travel planner. "
             "Use tools when they can verify geography, country facts, weather, or "
             "destination background. Return concise notes with evidence and call out "
-            "uncertainty instead of inventing facts."
+            "uncertainty instead of inventing facts.\n\n"
+            "Tool error recovery: when a tool result is a dict containing an 'error' "
+            "key (or a payload prefixed with 'TOOL_ERROR:'), follow this policy. "
+            "(1) On the first error, retry with materially different arguments — "
+            "simplify the place name, drop qualifiers, use a known alternate "
+            "spelling (e.g. 'Vancouver, BC, Canada' -> 'Vancouver' or 'Vancouver, "
+            "British Columbia'), or adjust the days value. (2) If the second "
+            "attempt also errors, stop calling that tool; pivot to a different "
+            "tool or note the data gap and continue with partial information. "
+            "(3) Never retry a failing tool with identical arguments — it will "
+            "fail identically and burn the recursion budget."
         ),
     )
     logistics_agent = create_react_agent(
@@ -80,7 +90,16 @@ def build_travel_graph():
         prompt=(
             "You are the logistics sub-agent. Estimate travel feasibility, rough "
             "distance, seasonal weather impacts, pacing, and route considerations. "
-            "Use tools for distance, geocoding, and weather."
+            "Use tools for distance, geocoding, and weather.\n\n"
+            "Tool error recovery: when a tool result is a dict containing an 'error' "
+            "key (or a payload prefixed with 'TOOL_ERROR:'), retry once with "
+            "materially different arguments — simplify the origin or destination "
+            "string, drop qualifiers, or use an alternate spelling (e.g. "
+            "'Vancouver, BC, Canada' -> 'Vancouver'). If the retry also errors, "
+            "stop calling that tool and either pivot to a different tool or note "
+            "the data gap and continue with partial information. Never retry a "
+            "failing tool with identical arguments — it will fail identically and "
+            "burn the recursion budget."
         ),
     )
     budget_agent = create_react_agent(
@@ -89,7 +108,14 @@ def build_travel_graph():
         prompt=(
             "You are the budget sub-agent. Use the budget and exchange-rate tools. "
             "Produce a practical range, explain assumptions, and flag that booked "
-            "prices must be verified."
+            "prices must be verified.\n\n"
+            "Tool error recovery: when a tool result is a dict containing an 'error' "
+            "key (or a payload prefixed with 'TOOL_ERROR:'), retry once with "
+            "materially different arguments — try an alternate currency pair, a "
+            "simpler destination string, or a different travel style. If the retry "
+            "also errors, stop calling that tool and continue with conservative, "
+            "clearly labeled assumptions. Never retry a failing tool with identical "
+            "arguments — it will fail identically and burn the recursion budget."
         ),
     )
     itinerary_agent = create_react_agent(
@@ -98,7 +124,15 @@ def build_travel_graph():
         prompt=(
             "You are the itinerary sub-agent. Build a day-by-day plan that respects "
             "the user's constraints and the notes from the other sub-agents. Use tools "
-            "for weather or attraction context when helpful."
+            "for weather or attraction context when helpful.\n\n"
+            "Tool error recovery: when a tool result is a dict containing an 'error' "
+            "key (or a payload prefixed with 'TOOL_ERROR:'), retry once with "
+            "materially different arguments — simplify the place name, drop "
+            "qualifiers, use an alternate spelling, or adjust the days value. If "
+            "the retry also errors, stop calling that tool and either pivot to a "
+            "different tool or proceed with partial information. Never retry a "
+            "failing tool with identical arguments — it will fail identically and "
+            "burn the recursion budget."
         ),
     )
 
