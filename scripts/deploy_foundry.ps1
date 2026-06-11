@@ -14,6 +14,10 @@ param(
     [string]$AzureTracingGenAiContentRecordingEnabled = "true",
     [string]$OtelSemconvStabilityOptIn = "gen_ai_latest_experimental",
     [string]$OtelInstrumentationGenAiCaptureMessageContent = "SPAN_AND_EVENT",
+    [string]$LangSmithTracing = "true",
+    [string]$LangSmithEndpoint = "https://api.smith.langchain.com",
+    [string]$LangSmithApiKey = "",
+    [string]$LangSmithProject = "Project1",
     [string]$ChaosMode = "off",
     [double]$ChaosRate = 0.1,
     [double]$ChaosLatencyMinSeconds = 5.0,
@@ -100,6 +104,10 @@ Invoke-Checked { azd env set AZURE_AI_MODEL_DEPLOYMENT_NAME $ModelDeployment --e
 Invoke-Checked { azd env set AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED $AzureTracingGenAiContentRecordingEnabled --environment $Environment } "azd env set AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED"
 Invoke-Checked { azd env set OTEL_SEMCONV_STABILITY_OPT_IN $OtelSemconvStabilityOptIn --environment $Environment } "azd env set OTEL_SEMCONV_STABILITY_OPT_IN"
 Invoke-Checked { azd env set OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT $OtelInstrumentationGenAiCaptureMessageContent --environment $Environment } "azd env set OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"
+Invoke-Checked { azd env set LANGSMITH_TRACING $LangSmithTracing --environment $Environment } "azd env set LANGSMITH_TRACING"
+Invoke-Checked { azd env set LANGSMITH_ENDPOINT $LangSmithEndpoint --environment $Environment } "azd env set LANGSMITH_ENDPOINT"
+Invoke-Checked { azd env set LANGSMITH_API_KEY $LangSmithApiKey --environment $Environment } "azd env set LANGSMITH_API_KEY"
+Invoke-Checked { azd env set LANGSMITH_PROJECT $LangSmithProject --environment $Environment } "azd env set LANGSMITH_PROJECT"
 Invoke-Checked { azd env set CHAOS_MODE $ChaosMode --environment $Environment } "azd env set CHAOS_MODE"
 Invoke-Checked { azd env set CHAOS_RATE $ChaosRate --environment $Environment } "azd env set CHAOS_RATE"
 Invoke-Checked { azd env set CHAOS_LATENCY_MIN_SECONDS $ChaosLatencyMinSeconds --environment $Environment } "azd env set CHAOS_LATENCY_MIN_SECONDS"

@@ -22,6 +22,26 @@ DESTINATIONS = [
     "Seoul",
     "Montreal",
     "Marrakesh",
+    "Bangkok",
+    "Buenos Aires",
+    "Edinburgh",
+    "Istanbul",
+    "Lima",
+    "Porto",
+    "Prague",
+    "Queenstown",
+    "Singapore",
+    "Tbilisi",
+    "Vienna",
+    "Hanoi",
+    "Helsinki",
+    "Ljubljana",
+    "Oaxaca City",
+    "Split",
+    "Taipei",
+    "Valletta",
+    "Wellington",
+    "Zanzibar City",
 ]
 
 ORIGINS = [
@@ -32,6 +52,17 @@ ORIGINS = [
     "Austin",
     "Boston",
     "Los Angeles",
+    "Denver",
+    "Atlanta",
+    "Toronto",
+    "London",
+    "Dublin",
+    "Sydney",
+    "Berlin",
+    "Amsterdam",
+    "Dubai",
+    "Bengaluru",
+    "Sao Paulo",
 ]
 
 INTERESTS = [
@@ -41,30 +72,145 @@ INTERESTS = [
     "outdoor activities and scenic views",
     "public transit and low-stress logistics",
     "coffee shops, bookstores, and architecture",
+    "street food and night markets",
+    "wine, vineyards, and slow countryside drives",
+    "hiking, national parks, and wildlife",
+    "art galleries and live music",
+    "beaches, snorkeling, and watersports",
+    "local festivals and cultural events",
+    "photography and scenic viewpoints",
+    "wellness, spas, and quiet retreats",
+    "shopping, design, and local crafts",
+    "off-the-beaten-path neighborhoods",
 ]
 
 MONTHS = [
+    "January",
+    "February",
     "March",
     "April",
     "May",
     "June",
+    "July",
+    "August",
     "September",
     "October",
     "November",
     "December",
 ]
 
+TRAVELER_GROUPS = [
+    "a solo traveler",
+    "a couple",
+    "two friends",
+    "a group of four friends",
+    "a family with young kids",
+    "a family with teenagers",
+    "a multigenerational family",
+    "a group of five college friends",
+]
+
+PACES = [
+    "relaxed",
+    "balanced",
+    "packed and fast-paced",
+    "slow and immersive",
+]
+
+CONSTRAINTS = [
+    "mostly vegetarian dining options",
+    "wheelchair-accessible venues",
+    "minimal flying and lots of trains",
+    "kid-friendly restaurants and early evenings",
+    "a no-car itinerary",
+    "late-night dining and nightlife",
+    "pet-friendly stays",
+    "budget hostels and cheap eats",
+    "boutique hotels in central areas",
+    "a focus on sustainable, low-impact travel",
+]
+
+
+def _trip_request() -> str:
+    nights = random.randint(3, 12)
+    budget = random.choice([1200, 1800, 2500, 3200, 4500, 6500, 9000])
+    return (
+        f"Plan a {nights}-night {random.choice(INTERESTS)} trip from "
+        f"{random.choice(ORIGINS)} to {random.choice(DESTINATIONS)} in "
+        f"{random.choice(MONTHS)} for {random.choice(TRAVELER_GROUPS)}, with a "
+        f"target budget around {budget} USD. Prefer {random.choice(CONSTRAINTS)} "
+        f"and include weather-aware backup ideas."
+    )
+
+
+def _itinerary_request() -> str:
+    days = random.randint(2, 7)
+    return (
+        f"Build a {random.choice(PACES)} {days}-day itinerary for "
+        f"{random.choice(TRAVELER_GROUPS)} visiting {random.choice(DESTINATIONS)} "
+        f"in {random.choice(MONTHS)}, focused on {random.choice(INTERESTS)}."
+    )
+
+
+def _budget_request() -> str:
+    nights = random.randint(4, 10)
+    budget = random.choice([1500, 2200, 3000, 4000, 5500])
+    return (
+        f"Is {budget} USD realistic for a {nights}-night trip to "
+        f"{random.choice(DESTINATIONS)} for {random.choice(TRAVELER_GROUPS)} in "
+        f"{random.choice(MONTHS)}? Give a rough budget breakdown and ways to save."
+    )
+
+
+def _comparison_request() -> str:
+    first, second = random.sample(DESTINATIONS, 2)
+    return (
+        f"Compare {first} and {second} for a {random.choice(MONTHS)} trip focused "
+        f"on {random.choice(INTERESTS)} for {random.choice(TRAVELER_GROUPS)}. "
+        f"Which is the better fit and why?"
+    )
+
+
+def _feasibility_request() -> str:
+    days = random.randint(2, 5)
+    return (
+        f"Is {days} days enough to enjoy {random.choice(DESTINATIONS)} in "
+        f"{random.choice(MONTHS)} if I care most about {random.choice(INTERESTS)}? "
+        f"What would you prioritize or cut?"
+    )
+
+
+def _logistics_request() -> str:
+    return (
+        f"I'm flying from {random.choice(ORIGINS)} to "
+        f"{random.choice(DESTINATIONS)} in {random.choice(MONTHS)} with "
+        f"{random.choice(TRAVELER_GROUPS)}. What should I know about getting "
+        f"around, weather, and what to pack?"
+    )
+
+
+def _day_trip_request() -> str:
+    return (
+        f"Suggest the best day trips and half-day excursions from "
+        f"{random.choice(DESTINATIONS)} in {random.choice(MONTHS)} for "
+        f"{random.choice(TRAVELER_GROUPS)} interested in "
+        f"{random.choice(INTERESTS)}."
+    )
+
+
+PROMPT_BUILDERS = [
+    _trip_request,
+    _itinerary_request,
+    _budget_request,
+    _comparison_request,
+    _feasibility_request,
+    _logistics_request,
+    _day_trip_request,
+]
+
 
 def build_prompt() -> str:
-    travelers = random.choice([1, 2, 2, 3, 4])
-    nights = random.randint(3, 9)
-    budget = random.choice([1800, 2500, 3200, 4500, 6500])
-    return (
-        f"Plan a {nights} night {random.choice(INTERESTS)} trip from "
-        f"{random.choice(ORIGINS)} to {random.choice(DESTINATIONS)} in "
-        f"{random.choice(MONTHS)} for {travelers} traveler(s), with a target "
-        f"budget around {budget} USD. Include weather-aware backup ideas."
-    )
+    return random.choice(PROMPT_BUILDERS)()
 
 
 def output_text(response: Any) -> str:

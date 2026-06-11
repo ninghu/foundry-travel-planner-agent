@@ -80,3 +80,39 @@ def configure_logging() -> None:
         level=getattr(logging, settings.log_level.upper(), logging.INFO),
         format="%(asctime)s %(levelname)s %(name)s %(message)s",
     )
+
+
+def configure_tracing() -> None:
+    """Report active GenAI tracing destinations.
+
+    Foundry tracing flows over OpenTelemetry and is configured by the hosted
+    runtime / ``OTEL_*`` and ``AZURE_TRACING_*`` environment variables. LangSmith
+    tracing is LangChain's native (non-OTEL) tracer, enabled purely through the
+    ``LANGSMITH_*`` environment variables. The two pipelines are independent, so
+    both export at the same time without conflicting.
+    """
+    logger = logging.getLogger(__name__)
+
+    langsmith_enabled = os.getenv("LANGSMITH_TRACING", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+    if langsmith_enabled and not os.getenv("LANGSMITH_API_KEY"):
+        logger.warning(
+            "LANGSMITH_TRACING is enabled but LANGSMITH_API_KEY is not set; "
+            "LangSmith traces will not be exported."
+        )
+        return
+
+    if langsmith_enabled:
+        os.environ.setdefault("LANGSMITH_PROJECT", "travel-planner-langgraph")
+        logger.info(
+            "LangSmith tracing enabled (project=%s, endpoint=%s). Foundry "
+            "OpenTelemetry tracing remains active in parallel.",
+            os.getenv("LANGSMITH_PROJECT"),
+            os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com"),
+        )
+    else:
+        logger.debug("LangSmith tracing disabled; Foundry OpenTelemetry tracing only.")

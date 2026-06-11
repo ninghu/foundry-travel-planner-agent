@@ -64,6 +64,56 @@ $env:OTEL_SEMCONV_STABILITY_OPT_IN = "gen_ai_latest_experimental"
 $env:OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT = "SPAN_AND_EVENT"
 ```
 
+## Tracing
+
+Foundry tracing is on by default. The agent emits OpenTelemetry GenAI spans that
+the hosted runtime exports to the Foundry project (the `OTEL_*` and
+`AZURE_TRACING_*` variables control content recording).
+
+### Dual-export to LangSmith
+
+Because the agent is a native LangGraph graph, it can stream the same runs to
+LangSmith at the same time as Foundry. LangSmith uses LangChain's native tracer,
+which is independent of the OpenTelemetry pipeline that feeds Foundry, so both
+destinations receive traces without conflicting.
+
+Enable it locally by setting the LangSmith variables in `.env`:
+
+```powershell
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=<your-langsmith-api-key>
+LANGSMITH_PROJECT=travel-planner-langgraph
+# LANGSMITH_ENDPOINT defaults to https://api.smith.langchain.com
+```
+
+For the deployed Foundry hosted agent, pass the same values to the deploy
+helper:
+
+```powershell
+.\scripts\deploy_foundry.ps1 -LangSmithTracing true -LangSmithApiKey "<your-langsmith-api-key>"
+```
+
+Leave `LANGSMITH_TRACING` at `false` (the default) to keep Foundry-only tracing.
+
+> The LangSmith API key is a secret. This sample forwards it as a plain
+> environment variable to match the existing configuration flow; for production,
+> store it in a secret store (for example, Azure Key Vault) instead of the agent
+> manifest, and make sure the hosted agent has network egress to the LangSmith
+> endpoint.
+
+### Deploying the agent to LangSmith / LangGraph Platform
+
+LangSmith itself is an observability, evaluation, and prompt platform, not an
+agent runtime, so there is no "deploy to LangSmith" for serving. The hosting
+product in the LangChain ecosystem is **LangGraph Platform** (surfaced as
+LangSmith Deployment: managed Cloud on the Plus tier, or self-hosted on
+Enterprise). The compiled graph from `build_travel_graph()` is reusable there,
+but LangGraph Platform is a separate deployment target with a different serving
+API (LangGraph Server: assistants, threads, and runs) than the Foundry hosted
+Responses endpoint, so it is an addition rather than a drop-in replacement. This
+sample ships only the Foundry deployment path; adding a `langgraph.json`
+entrypoint would enable LangGraph Platform deployment if you later need it.
+
 ## Generate Traffic
 
 After deployment:

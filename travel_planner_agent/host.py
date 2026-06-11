@@ -19,11 +19,12 @@ from travel_planner_agent.chaos import (
     maybe_raise_http_500,
     maybe_sleep_for_latency,
 )
-from travel_planner_agent.config import configure_logging
+from travel_planner_agent.config import configure_logging, configure_tracing
 from travel_planner_agent.graph import build_travel_graph
 
 
 configure_logging()
+configure_tracing()
 logger = logging.getLogger(__name__)
 
 GRAPH = build_travel_graph()
