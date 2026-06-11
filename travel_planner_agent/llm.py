@@ -7,11 +7,17 @@ from travel_planner_agent.config import get_settings
 
 
 @lru_cache(maxsize=1)
-def get_chat_model() -> AzureAIOpenAIApiChatModel:
+def get_chat_model():
     settings = get_settings()
-    return AzureAIOpenAIApiChatModel(
+    base = AzureAIOpenAIApiChatModel(
         project_endpoint=settings.project_endpoint,
         credential=DefaultAzureCredential(),
         model=settings.model_deployment_name,
         streaming=True,
+    )
+    return base.with_config(
+        metadata={
+            "ls_provider": "azure",
+            "ls_model_name": settings.model_deployment_name,
+        }
     )

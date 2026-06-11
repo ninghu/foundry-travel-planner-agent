@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 
 from azure.ai.agentserver.responses import (
     CreateResponse,
@@ -73,9 +74,27 @@ async def handle_create(
 
             messages = _history_to_langchain_messages(history)
             messages.append(HumanMessage(content=current_input))
+            # Prefer conversation_id for thread grouping; fall back to response_id when the
+            # ResponseContext does not expose a stable conversation id.
+            thread_id = getattr(context, "conversation_id", None) or getattr(
+                context, "response_id", None
+            )
             result = await GRAPH.ainvoke(
                 {"messages": messages, "user_request": current_input},
-                config={"recursion_limit": 80},
+                config={
+                    "recursion_limit": 80,
+                    "run_name": "foundry_travel_planner",
+                    "tags": [
+                        "foundry",
+                        "travel_planner",
+                        os.getenv("ENVIRONMENT", "production"),
+                    ],
+                    "metadata": {
+                        "thread_id": thread_id,
+                        "user_id": getattr(context, "user_id", None),
+                        "environment": os.getenv("ENVIRONMENT", "production"),
+                    },
+                },
             )
             if not cancellation_signal.is_set():
                 yield result.get("final_answer", "I could not create a travel plan.")
