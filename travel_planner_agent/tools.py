@@ -107,8 +107,8 @@ def _weather_code_label(code: int | None) -> str:
 @tool
 def geocode_place(place: str) -> str:
     """Resolve a destination, city, or airport-area name to coordinates and country metadata."""
-    maybe_raise_tool_failure("geocode_place")
     try:
+        maybe_raise_tool_failure("geocode_place")
         return _json(_geocode_raw(place))
     except Exception as exc:
         return _json({"error": str(exc), "place": place})
@@ -117,8 +117,8 @@ def geocode_place(place: str) -> str:
 @tool
 def get_weather_forecast(place: str, start_date: str | None = None, days: int = 7) -> str:
     """Get a daily weather forecast for a destination using Open-Meteo."""
-    maybe_raise_tool_failure("get_weather_forecast")
     try:
+        maybe_raise_tool_failure("get_weather_forecast")
         location = _geocode_raw(place)
         day_count = max(1, min(int(days), 14))
         start = date.fromisoformat(start_date) if start_date else date.today()
@@ -169,8 +169,8 @@ def get_weather_forecast(place: str, start_date: str | None = None, days: int = 
 @tool
 def search_destination_places(query: str, limit: int = 3) -> str:
     """Search OpenStreetMap/Nominatim for destination or attraction place matches."""
-    maybe_raise_tool_failure("search_destination_places")
     try:
+        maybe_raise_tool_failure("search_destination_places")
         data = _get_json(
             "https://nominatim.openstreetmap.org/search",
             {
@@ -209,8 +209,8 @@ def search_destination_places(query: str, limit: int = 3) -> str:
 @tool
 def get_country_profile(place_or_country: str) -> str:
     """Return country-level facts such as currencies, languages, timezones, and capital."""
-    maybe_raise_tool_failure("get_country_profile")
     try:
+        maybe_raise_tool_failure("get_country_profile")
         try:
             country_name = _geocode_raw(place_or_country).get("country") or place_or_country
         except Exception:
@@ -241,8 +241,8 @@ def get_country_profile(place_or_country: str) -> str:
 @tool
 def estimate_route_distance(origin: str, destination: str) -> str:
     """Estimate straight-line distance and rough flight duration between two places."""
-    maybe_raise_tool_failure("estimate_route_distance")
     try:
+        maybe_raise_tool_failure("estimate_route_distance")
         start = _geocode_raw(origin)
         end = _geocode_raw(destination)
         km = _haversine_km(
@@ -268,8 +268,8 @@ def estimate_route_distance(origin: str, destination: str) -> str:
 @tool
 def get_exchange_rate(base_currency: str, target_currency: str) -> str:
     """Return the latest exchange rate from one ISO currency code to another."""
-    maybe_raise_tool_failure("get_exchange_rate")
     try:
+        maybe_raise_tool_failure("get_exchange_rate")
         rate = _exchange_rate_raw(base_currency, target_currency)
         return _json(
             {
@@ -299,8 +299,8 @@ def estimate_trip_budget(
     target_currency: str = "USD",
 ) -> str:
     """Estimate a practical trip budget by lodging, meals, activities, local transport, and flight distance."""
-    maybe_raise_tool_failure("estimate_trip_budget")
     try:
+        maybe_raise_tool_failure("estimate_trip_budget")
         nights_count = max(1, min(int(nights), 45))
         traveler_count = max(1, min(int(travelers), 12))
         normalized_style = style.lower().strip()

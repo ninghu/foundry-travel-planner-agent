@@ -103,106 +103,130 @@ def build_travel_graph():
     )
 
     async def destination_research(state: TravelPlanState) -> dict[str, str]:
-        maybe_raise_llm_failure("destination_research_agent")
-        prompt = (
-            "Traveler request:\n"
-            f"{_request(state)}\n\n"
-            "Conversation context:\n"
-            f"{_conversation_context(state)}\n\n"
-            "Research the destination, country basics, seasonal/weather context, "
-            "and any destination-specific constraints."
-        )
-        result = await destination_research_agent.ainvoke(
-            {"messages": [HumanMessage(content=prompt)]},
-            config={"recursion_limit": 12},
-        )
-        return {"destination_research": _last_message_text(result)}
+        try:
+            maybe_raise_llm_failure("destination_research_agent")
+            prompt = (
+                "Traveler request:\n"
+                f"{_request(state)}\n\n"
+                "Conversation context:\n"
+                f"{_conversation_context(state)}\n\n"
+                "Research the destination, country basics, seasonal/weather context, "
+                "and any destination-specific constraints."
+            )
+            result = await destination_research_agent.ainvoke(
+                {"messages": [HumanMessage(content=prompt)]},
+                config={"recursion_limit": 12},
+            )
+            return {"destination_research": _last_message_text(result)}
+        except Exception as exc:
+            return {"destination_research": f"[stage_error: destination_research failed: {exc}]"}
 
     async def logistics(state: TravelPlanState) -> dict[str, str]:
-        maybe_raise_llm_failure("logistics_agent")
-        prompt = (
-            "Traveler request:\n"
-            f"{_request(state)}\n\n"
-            "Destination research notes:\n"
-            f"{state.get('destination_research', '')}\n\n"
-            "Analyze travel logistics, approximate route distance, weather impacts, "
-            "arrival/departure pacing, and any planning risks."
-        )
-        result = await logistics_agent.ainvoke(
-            {"messages": [HumanMessage(content=prompt)]},
-            config={"recursion_limit": 12},
-        )
-        return {"logistics": _last_message_text(result)}
+        try:
+            maybe_raise_llm_failure("logistics_agent")
+            prompt = (
+                "Traveler request:\n"
+                f"{_request(state)}\n\n"
+                "Destination research notes:\n"
+                f"{state.get('destination_research', '')}\n\n"
+                "Analyze travel logistics, approximate route distance, weather impacts, "
+                "arrival/departure pacing, and any planning risks."
+            )
+            result = await logistics_agent.ainvoke(
+                {"messages": [HumanMessage(content=prompt)]},
+                config={"recursion_limit": 12},
+            )
+            return {"logistics": _last_message_text(result)}
+        except Exception as exc:
+            return {"logistics": f"[stage_error: logistics failed: {exc}]"}
 
     async def budget(state: TravelPlanState) -> dict[str, str]:
-        maybe_raise_llm_failure("budget_agent")
-        prompt = (
-            "Traveler request:\n"
-            f"{_request(state)}\n\n"
-            "Destination research notes:\n"
-            f"{state.get('destination_research', '')}\n\n"
-            "Logistics notes:\n"
-            f"{state.get('logistics', '')}\n\n"
-            "Estimate the trip budget. If a needed input is missing, make a clearly "
-            "labeled conservative assumption and continue."
-        )
-        result = await budget_agent.ainvoke(
-            {"messages": [HumanMessage(content=prompt)]},
-            config={"recursion_limit": 12},
-        )
-        return {"budget": _last_message_text(result)}
+        try:
+            maybe_raise_llm_failure("budget_agent")
+            prompt = (
+                "Traveler request:\n"
+                f"{_request(state)}\n\n"
+                "Destination research notes:\n"
+                f"{state.get('destination_research', '')}\n\n"
+                "Logistics notes:\n"
+                f"{state.get('logistics', '')}\n\n"
+                "Estimate the trip budget. If a needed input is missing, make a clearly "
+                "labeled conservative assumption and continue."
+            )
+            result = await budget_agent.ainvoke(
+                {"messages": [HumanMessage(content=prompt)]},
+                config={"recursion_limit": 12},
+            )
+            return {"budget": _last_message_text(result)}
+        except Exception as exc:
+            return {"budget": f"[stage_error: budget failed: {exc}]"}
 
     async def itinerary(state: TravelPlanState) -> dict[str, str]:
-        maybe_raise_llm_failure("itinerary_agent")
-        prompt = (
-            "Traveler request:\n"
-            f"{_request(state)}\n\n"
-            "Destination research notes:\n"
-            f"{state.get('destination_research', '')}\n\n"
-            "Logistics notes:\n"
-            f"{state.get('logistics', '')}\n\n"
-            "Budget notes:\n"
-            f"{state.get('budget', '')}\n\n"
-            "Create a realistic day-by-day itinerary with pacing, neighborhoods, "
-            "food/activity ideas, and backup weather-aware options."
-        )
-        result = await itinerary_agent.ainvoke(
-            {"messages": [HumanMessage(content=prompt)]},
-            config={"recursion_limit": 12},
-        )
-        return {"itinerary": _last_message_text(result)}
+        try:
+            maybe_raise_llm_failure("itinerary_agent")
+            prompt = (
+                "Traveler request:\n"
+                f"{_request(state)}\n\n"
+                "Destination research notes:\n"
+                f"{state.get('destination_research', '')}\n\n"
+                "Logistics notes:\n"
+                f"{state.get('logistics', '')}\n\n"
+                "Budget notes:\n"
+                f"{state.get('budget', '')}\n\n"
+                "Create a realistic day-by-day itinerary with pacing, neighborhoods, "
+                "food/activity ideas, and backup weather-aware options."
+            )
+            result = await itinerary_agent.ainvoke(
+                {"messages": [HumanMessage(content=prompt)]},
+                config={"recursion_limit": 12},
+            )
+            return {"itinerary": _last_message_text(result)}
+        except Exception as exc:
+            return {"itinerary": f"[stage_error: itinerary failed: {exc}]"}
 
     async def final_planner(state: TravelPlanState) -> dict[str, str]:
-        maybe_raise_llm_failure("final_planner")
-        messages = [
-            SystemMessage(
-                content=(
-                    "You are the final travel-planner agent. Combine the specialized "
-                    "sub-agent notes into one clear plan. Include a short assumptions "
-                    "section, a day-by-day itinerary, budget summary, logistics notes, "
-                    "weather/seasonality notes, and next actions. Do not claim to book "
-                    "flights, hotels, or reservations."
+        try:
+            maybe_raise_llm_failure("final_planner")
+            messages = [
+                SystemMessage(
+                    content=(
+                        "You are the final travel-planner agent. Combine the specialized "
+                        "sub-agent notes into one clear plan. Include a short assumptions "
+                        "section, a day-by-day itinerary, budget summary, logistics notes, "
+                        "weather/seasonality notes, and next actions. Do not claim to book "
+                        "flights, hotels, or reservations. If any sub-agent note contains a "
+                        "`[stage_error: ...]` marker, treat that stage's output as missing: "
+                        "explicitly acknowledge the gap in an Assumptions or Limitations "
+                        "section and produce a best-effort plan from the remaining stages "
+                        "rather than failing."
+                    )
+                ),
+                HumanMessage(
+                    content=(
+                        "Traveler request:\n"
+                        f"{_request(state)}\n\n"
+                        "Destination research sub-agent:\n"
+                        f"{state.get('destination_research', '')}\n\n"
+                        "Logistics sub-agent:\n"
+                        f"{state.get('logistics', '')}\n\n"
+                        "Budget sub-agent:\n"
+                        f"{state.get('budget', '')}\n\n"
+                        "Itinerary sub-agent:\n"
+                        f"{state.get('itinerary', '')}\n\n"
+                        "Return the final plan in concise Markdown."
+                    )
+                ),
+            ]
+            response = await llm.ainvoke(messages)
+            answer = _message_text(response.content)
+            return {"final_answer": maybe_degrade_final_answer(answer, _request(state))}
+        except Exception as exc:
+            return {
+                "final_answer": (
+                    f"I could not complete the travel plan due to an internal error: {exc}. "
+                    "Please retry."
                 )
-            ),
-            HumanMessage(
-                content=(
-                    "Traveler request:\n"
-                    f"{_request(state)}\n\n"
-                    "Destination research sub-agent:\n"
-                    f"{state.get('destination_research', '')}\n\n"
-                    "Logistics sub-agent:\n"
-                    f"{state.get('logistics', '')}\n\n"
-                    "Budget sub-agent:\n"
-                    f"{state.get('budget', '')}\n\n"
-                    "Itinerary sub-agent:\n"
-                    f"{state.get('itinerary', '')}\n\n"
-                    "Return the final plan in concise Markdown."
-                )
-            ),
-        ]
-        response = await llm.ainvoke(messages)
-        answer = _message_text(response.content)
-        return {"final_answer": maybe_degrade_final_answer(answer, _request(state))}
+            }
 
     graph = StateGraph(TravelPlanState)
     graph.add_node("destination_research", destination_research)
