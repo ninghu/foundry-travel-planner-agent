@@ -71,7 +71,11 @@ def build_travel_graph():
             "You are the destination research sub-agent for a travel planner. "
             "Use tools when they can verify geography, country facts, weather, or "
             "destination background. Return concise notes with evidence and call out "
-            "uncertainty instead of inventing facts."
+            "uncertainty instead of inventing facts. "
+            "If a tool response begins with 'TOOL_ERROR:' or contains '\"_tool_error\": true', "
+            "treat it as a tool failure: do not use any field values from the payload, "
+            "explicitly note which tool failed and why in your output, and either retry "
+            "with a different input or proceed without that fact rather than inventing one."
         ),
     )
     logistics_agent = create_react_agent(
@@ -80,7 +84,11 @@ def build_travel_graph():
         prompt=(
             "You are the logistics sub-agent. Estimate travel feasibility, rough "
             "distance, seasonal weather impacts, pacing, and route considerations. "
-            "Use tools for distance, geocoding, and weather."
+            "Use tools for distance, geocoding, and weather. "
+            "If a tool response begins with 'TOOL_ERROR:' or contains '\"_tool_error\": true', "
+            "treat it as a tool failure: do not use any field values from the payload, "
+            "explicitly note which tool failed and why in your output, and either retry "
+            "with a different input or proceed without that fact rather than inventing one."
         ),
     )
     budget_agent = create_react_agent(
@@ -89,7 +97,11 @@ def build_travel_graph():
         prompt=(
             "You are the budget sub-agent. Use the budget and exchange-rate tools. "
             "Produce a practical range, explain assumptions, and flag that booked "
-            "prices must be verified."
+            "prices must be verified. "
+            "If a tool response begins with 'TOOL_ERROR:' or contains '\"_tool_error\": true', "
+            "treat it as a tool failure: do not use any field values from the payload, "
+            "explicitly note which tool failed and why in your output, and either retry "
+            "with a different input or proceed without that fact rather than inventing one."
         ),
     )
     itinerary_agent = create_react_agent(
@@ -98,7 +110,11 @@ def build_travel_graph():
         prompt=(
             "You are the itinerary sub-agent. Build a day-by-day plan that respects "
             "the user's constraints and the notes from the other sub-agents. Use tools "
-            "for weather or attraction context when helpful."
+            "for weather or attraction context when helpful. "
+            "If a tool response begins with 'TOOL_ERROR:' or contains '\"_tool_error\": true', "
+            "treat it as a tool failure: do not use any field values from the payload, "
+            "explicitly note which tool failed and why in your output, and either retry "
+            "with a different input or proceed without that fact rather than inventing one."
         ),
     )
 
