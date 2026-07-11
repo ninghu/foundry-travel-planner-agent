@@ -122,13 +122,7 @@ Invoke-Checked { azd env set AI_PROJECT_CONNECTIONS "[]" --environment $Environm
 Invoke-Checked { azd env set AI_PROJECT_CONNECTION_CREDENTIALS "{}" --environment $Environment } "azd env set AI_PROJECT_CONNECTION_CREDENTIALS"
 
 if (-not (Test-Path "azure.yaml")) {
-    azd ai agent init `
-        --manifest "agent.manifest.yaml" `
-        --src "." `
-        --project-id $ProjectId `
-        --model-deployment $ModelDeployment `
-        --environment $Environment `
-        --no-prompt
+    throw "azure.yaml is required. This project uses the unified Foundry agent manifest."
 }
 
 $azdUpSucceeded = $true

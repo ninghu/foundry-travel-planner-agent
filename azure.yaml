@@ -2,23 +2,42 @@
 
 requiredVersions:
     extensions:
-        azure.ai.agents: '>=0.1.0-preview'
+        azure.ai.agents: '>=1.0.0-beta.5'
 name: foundry-travel-planner-agent
 services:
     travel-planner-langgraph:
         project: .
         host: azure.ai.agent
-        language: docker
-        docker:
-            remoteBuild: true
-        config:
-            container:
-                resources:
-                    cpu: "1"
-                    memory: 2Gi
-                scale:
-                    maxReplicas: 1
-        startupCommand: python main.py
+        env:
+            AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
+            AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED: ${AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED}
+            CHAOS_LATENCY_MAX_SECONDS: ${CHAOS_LATENCY_MAX_SECONDS}
+            CHAOS_LATENCY_MIN_SECONDS: ${CHAOS_LATENCY_MIN_SECONDS}
+            CHAOS_MODE: ${CHAOS_MODE}
+            CHAOS_RATE: ${CHAOS_RATE}
+            LANGSMITH_API_KEY: ${LANGSMITH_API_KEY}
+            LANGSMITH_ENDPOINT: ${LANGSMITH_ENDPOINT}
+            LANGSMITH_PROJECT: ${LANGSMITH_PROJECT}
+            LANGSMITH_TRACING: ${LANGSMITH_TRACING}
+            OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT: ${OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT}
+            OTEL_SEMCONV_STABILITY_OPT_IN: ${OTEL_SEMCONV_STABILITY_OPT_IN}
+            TRAVEL_AGENT_LOG_LEVEL: INFO
+            TRAVEL_TOOL_TIMEOUT_SECONDS: "8"
+        codeConfiguration:
+            dependencyResolution: remote_build
+            entryPoint: main.py
+            runtime: python_3_13
+        container:
+            resources:
+                cpu: "1"
+                memory: 2Gi
+        description: Multi-agent travel planner built with LangGraph and exposed through the Microsoft Foundry hosted-agent Responses protocol.
+        displayName: Travel Planner LangGraph
+        kind: hosted
+        name: travel-planner-langgraph
+        protocols:
+            - protocol: responses
+              version: 1.0.0
 infra:
     provider: bicep
     path: ./infra

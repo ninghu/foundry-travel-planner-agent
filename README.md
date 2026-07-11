@@ -46,7 +46,22 @@ The default deployment target is the Foundry project from the request:
 https://foundry-sre-project-resource.services.ai.azure.com/api/projects/foundry-sre-project
 ```
 
-Deploy with:
+The azd service uses Foundry source-code deployment: azd packages the Python source according to
+`.agentignore`, uploads the ZIP, and Foundry installs `requirements.txt` with the Python 3.13 remote
+builder before starting `python main.py`. The unified `azure.yaml` contains the agent identity,
+protocol, resources, and environment-variable mapping. This path does not build or push the
+`Dockerfile` to ACR.
+
+`agent.yaml` is retained as a compatibility mirror for the current beta `azd ai agent doctor`
+check. It is excluded from the deployed ZIP; `azure.yaml` is authoritative.
+
+Deploy code changes to the existing project and agent with:
+
+```powershell
+azd deploy travel-planner-langgraph --environment foundry-travel-planner --no-prompt
+```
+
+For first-time environment setup, RBAC checks, and a smoke test, use:
 
 ```powershell
 .\scripts\deploy_foundry.ps1
@@ -55,6 +70,14 @@ Deploy with:
 The helper initializes the `azd` environment if needed, points it at the
 existing `gpt-5.4-mini` model deployment, runs `azd up`, applies required
 Foundry-hosted-agent RBAC, and performs a Responses API smoke test.
+
+The repository includes a generated `smoke-core` evaluation configuration for the deployed Travel
+Planner. After its asynchronous dataset and evaluator generation finishes, finalize the generated
+artifacts and run the suite with:
+
+```powershell
+azd ai agent eval run
+```
 
 The deployment helper also enables GenAI content recording for trace spans:
 
